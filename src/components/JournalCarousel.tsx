@@ -1,7 +1,9 @@
 // src/components/JournalCarousel.tsx
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { motion, MotionConfig, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion';
+import { useEffect, useRef, useMemo, useState, memo } from 'react';
+import { motion, MotionConfig, useMotionValue, useTransform, animate, type PanInfo, AnimatePresence } from 'framer-motion';
 import type { JournalEntry } from '../types';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useEventStore } from '../stores/use-event-store';
 
 // --- Props & Constants ---
 interface JournalCarouselProps {
@@ -9,6 +11,7 @@ interface JournalCarouselProps {
   selectedIndex: number;
   onClose: () => void;
   onSelectedIndexChange: (newIndex: number) => void;
+  onOpenEditForm: (entry: JournalEntry) => void;
 }
 
 const DRAG_BUFFER = 50;
@@ -16,7 +19,7 @@ const PEEK_X_PERCENTAGE = '65%';
 const CARD_SCALE = 0.85;
 const CARD_OPACITY = 0.5;
 
-// --- Built-in throttle (no external libs) ---
+// --- Built-in throttle ---
 function throttle<T extends (...args: any[]) => void>(func: T, wait: number): T {
   let lastTime = 0;
   return ((...args: any[]) => {
@@ -29,10 +32,18 @@ function throttle<T extends (...args: any[]) => void>(func: T, wait: number): T 
 }
 
 // --- CarouselCard Component ---
-const CarouselCard: React.FC<{ entry: JournalEntry }> = React.memo(({ entry }) => {
+const CarouselCard: React.FC<{
+  entry: JournalEntry;
+  onEdit: () => void;
+  onDelete: () => void;
+}> = memo(({ entry, onEdit, onDelete }) => {
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const stars = Array.from({ length: 5 }, (_, i) => (
     <span key={i} className={`align-middle ${i < Math.round(entry.rating) ? 'text-blue-500' : 'text-gray-300'}`}>★</span>
   ));
+
   const initials = entry.categories.slice(0, 2).map((cat, i) => {
     const colors = ['bg-purple-100 text-purple-700', 'bg-yellow-100 text-yellow-700'];
     return (
@@ -41,13 +52,59 @@ const CarouselCard: React.FC<{ entry: JournalEntry }> = React.memo(({ entry }) =
       </div>
     );
   });
+
   const formattedDate = new Date(entry.date.split('/').reverse().join('-')).toLocaleDateString('en-US', {
     day: '2-digit',
     month: 'long',
   });
 
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(prev => !prev);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit();
+    setIsMenuOpen(false);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className="w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col">
+      {/* Action Menu Button */}
+      <button
+        onClick={handleMenuClick}
+        className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+      >
+        <MoreVertical size={20} />
+      </button>
+
+      {/* Action Menu Dropdown */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-14 right-3 z-30 bg-white rounded-md shadow-lg border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button onClick={handleEditClick} className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <Pencil size={16} className="mr-2" /> Edit
+            </button>
+            <button onClick={handleDeleteClick} className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+              <Trash2 size={16} className="mr-2" /> Delete
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <img src={entry.imgUrl} alt="Journal entry" className="w-full h-64 object-cover" />
       <div className="flex flex-col flex-1 p-5">
         <div className="flex justify-between items-center mb-4">
@@ -67,7 +124,20 @@ const CarouselCard: React.FC<{ entry: JournalEntry }> = React.memo(({ entry }) =
 });
 
 // --- Animated Card using MotionValues ---
-const AnimatedCarouselCard = ({ entry, index, motionIndex }: { entry: JournalEntry; index: number; motionIndex: any }) => {
+const AnimatedCarouselCard = ({
+  entry,
+  index,
+  motionIndex,
+  onEdit,
+  onDelete,
+}: {
+  entry: JournalEntry;
+  index: number;
+  motionIndex: any;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => {
+
   const scale = useTransform(motionIndex, [index - 1, index, index + 1], [CARD_SCALE, 1, CARD_SCALE], { clamp: false });
   const x = useTransform(motionIndex, [index - 1, index, index + 1], [PEEK_X_PERCENTAGE, '0%', `-${PEEK_X_PERCENTAGE}`], { clamp: false });
   const opacity = useTransform(motionIndex, [index - 1, index, index + 1], [CARD_OPACITY, 1, CARD_OPACITY], { clamp: false });
@@ -79,7 +149,7 @@ const AnimatedCarouselCard = ({ entry, index, motionIndex }: { entry: JournalEnt
       className="absolute w-full h-full"
       style={{ x, scale, opacity, zIndex, willChange: 'transform, opacity' }}
     >
-      <CarouselCard entry={entry} />
+      <CarouselCard entry={entry} onEdit={onEdit} onDelete={onDelete} />
     </motion.div>
   );
 };
@@ -90,10 +160,35 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
   selectedIndex,
   onClose,
   onSelectedIndexChange,
+  onOpenEditForm,
 }) => {
+
+  const { deleteEntry } = useEventStore();
   const index = useMotionValue(selectedIndex);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleEdit = (entry: JournalEntry) => {
+    // 1. Close the carousel immediately
+    onClose();
+    // 2. A small delay for the exit animation to start
+    setTimeout(() => {
+      // 3. Tell the App component to open the form with this entry's data
+      onOpenEditForm(entry);
+    }, 300); // Should match the exit animation duration
+  };
+
+  const handleDelete = (entry: JournalEntry) => {
+    if (window.confirm('Are you sure you want to delete this journal entry?')) {
+      // 1. Close the carousel immediately
+      onClose();
+      // 2. A small delay for the exit animation to start
+      setTimeout(() => {
+        // 3. Dispatch the delete action directly to the store
+        deleteEntry(entry.id);
+      }, 300);
+    }
+  };
 
   // Animate when index changes
   useEffect(() => {
@@ -200,7 +295,15 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
           style={{ cursor: 'grab' }}
         >
           {visibleCards.map(({ entry, originalIndex }) => (
-            <AnimatedCarouselCard key={entry.date} entry={entry} index={originalIndex} motionIndex={index} />
+            <AnimatedCarouselCard
+              key={entry.id}
+              entry={entry}
+              index={originalIndex}
+              motionIndex={index}
+              // Pass the locally defined handlers
+              onEdit={() => handleEdit(entry)}
+              onDelete={() => handleDelete(entry)}
+            />
           ))}
         </motion.div>
       </motion.div>

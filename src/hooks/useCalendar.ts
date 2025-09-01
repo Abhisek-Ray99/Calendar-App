@@ -1,4 +1,4 @@
-// src/hooks/useCalendar.ts
+
 import { useMemo } from 'react';
 import {
   startOfMonth,
@@ -17,11 +17,7 @@ interface UseCalendarReturn {
   days: CalendarDay[];
 }
 
-/**
- * A custom hook to generate the days for a calendar month view.
- * @param {Date} monthDate - A date within the month to be rendered.
- * @returns {UseCalendarReturn}
- */
+
 export const useCalendar = (monthDate: Date): UseCalendarReturn => {
   const calendarData = useMemo(() => {
     const firstDayOfMonth = startOfMonth(monthDate);

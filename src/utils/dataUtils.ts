@@ -1,12 +1,8 @@
-// src/utils/dataUtils.ts
+
 import { parse } from 'date-fns';
 import type { JournalEntry } from '../types';
 
-/**
- * Parses and groups journal entries by date for efficient lookup.
- * @param {JournalEntry[]} entries - The array of journal entries.
- * @returns {Map<string, JournalEntry>} A map where keys are 'yyyy-MM-dd' and values are the entry.
- */
+
 export const groupEntriesByDate = (entries: JournalEntry[]): Map<string, JournalEntry> => {
   const entryMap = new Map<string, JournalEntry>();
   entries.forEach(entry => {

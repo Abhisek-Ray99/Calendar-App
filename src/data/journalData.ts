@@ -1,4 +1,4 @@
-// src/data/journalData.ts
+
 
 import type { JournalEntry } from "../types";
 

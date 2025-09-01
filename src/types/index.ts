@@ -1,4 +1,4 @@
-// src/types/index.ts
+
 
 export type JournalCategory = 
   | "Deep Conditioning"
@@ -34,7 +34,8 @@ export type JournalCategory =
   | "Toning";
 
 export interface JournalEntry {
-  imgUrl: string;
+  id?: string;
+  imgUrl?: string;
   rating: number;
   categories: JournalCategory[];
   date: string; // Format: "dd/MM/yyyy"

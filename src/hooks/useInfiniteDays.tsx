@@ -1,4 +1,4 @@
-// src/hooks/useInfiniteDays.ts
+
 import { useState, useMemo, useCallback } from 'react';
 import {
   addMonths,
