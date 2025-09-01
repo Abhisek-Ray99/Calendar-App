@@ -1,7 +1,7 @@
 // src/App.tsx
 // This file remains exactly the same as the last version.
 // It correctly handles the state for `selectedEntryIndex`.
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import CalendarHeader from './components/CalendarHeader';
 import InfiniteCalendar from './components/InfiniteCalendar';
 import { JournalCarousel } from './components/JournalCarousel';

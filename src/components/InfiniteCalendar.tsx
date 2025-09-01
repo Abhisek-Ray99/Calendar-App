@@ -73,7 +73,7 @@ const InfiniteCalendar: React.FC<InfiniteCalendarProps> = ({ journalEntries, onD
   const monthHeaderObserver = useRef<IntersectionObserver | null>(null);
 
   // Observer for infinite scrolling
-  const topObserverRef = useCallback(node => {
+  const topObserverRef = useCallback((node: HTMLDivElement | null) => {
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) loadMorePast();
@@ -81,7 +81,7 @@ const InfiniteCalendar: React.FC<InfiniteCalendarProps> = ({ journalEntries, onD
     if (node) observer.current.observe(node);
   }, [loadMorePast]);
 
-  const bottomObserverRef = useCallback(node => {
+  const bottomObserverRef = useCallback((node: HTMLDivElement | null) => {
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) loadMoreFuture();
