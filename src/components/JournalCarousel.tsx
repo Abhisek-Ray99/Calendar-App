@@ -179,13 +179,11 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
   };
 
   const handleDelete = (entry: JournalEntry) => {
-    if (window.confirm('Are you sure you want to delete this journal entry?')) {
-      // 1. Close the carousel immediately
+    if (entry.id && window.confirm('Are you sure you want to delete this journal entry?')) {
       onClose();
-      // 2. A small delay for the exit animation to start
       setTimeout(() => {
-        // 3. Dispatch the delete action directly to the store
-        deleteEntry(entry.id);
+        // Inside this block, TypeScript knows entry.id is a string
+        deleteEntry(entry.id as string);
       }, 300);
     }
   };
@@ -200,14 +198,20 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
     let isMounted = true;
     const preload = async () => {
       await Promise.all(
-        entries.map(
-          e =>
-            new Promise<void>(resolve => {
-              const img = new Image();
-              img.src = e.imgUrl;
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            })
+        entries.map(e =>
+          new Promise<void>(resolve => {
+            // If there's no image URL, just resolve and do nothing.
+            if (!e.imgUrl) {
+              resolve();
+              return;
+            }
+  
+            // If there is a URL, proceed with loading.
+            const img = new Image();
+            img.src = e.imgUrl; // Now TypeScript knows e.imgUrl is a string here.
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Always resolve, even on error.
+          })
         )
       );
       if (isMounted) setIsLoaded(true);
