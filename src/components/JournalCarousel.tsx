@@ -1,5 +1,5 @@
 // src/components/JournalCarousel.tsx
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { motion, MotionConfig, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion';
 import type { JournalEntry } from '../types';
 
@@ -93,13 +93,34 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
 }) => {
   const index = useMotionValue(selectedIndex);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // Animate when index changes
   useEffect(() => {
     animate(index, selectedIndex, { type: 'spring', stiffness: 400, damping: 40 });
   }, [selectedIndex, index]);
 
+  // Prefetch images (with caching) before showing carousel
   useEffect(() => {
-    entries.forEach(e => { const img = new Image(); img.src = e.imgUrl; });
+    let isMounted = true;
+    const preload = async () => {
+      await Promise.all(
+        entries.map(
+          e =>
+            new Promise<void>(resolve => {
+              const img = new Image();
+              img.src = e.imgUrl;
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+      if (isMounted) setIsLoaded(true);
+    };
+    preload();
+    return () => {
+      isMounted = false;
+    };
   }, [entries]);
 
   const handleDrag = throttle((_: any, info: PanInfo) => {
@@ -125,6 +146,14 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
     const end = Math.min(entries.length, selectedIndex + 3);
     return entries.slice(start, end).map((entry, i) => ({ entry, originalIndex: start + i }));
   }, [entries, selectedIndex]);
+
+  if (!isLoaded) {
+    return (
+      <div className="fixed inset-0 bg-black/70 z-40 flex items-center justify-center">
+        <div className="text-white text-lg">Loading images...</div>
+      </div>
+    );
+  }
 
   return (
     <MotionConfig transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}>
