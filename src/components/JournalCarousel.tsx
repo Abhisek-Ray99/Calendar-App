@@ -66,9 +66,29 @@ const CarouselCard: React.FC<{ entry: JournalEntry }> = React.memo(({ entry }) =
         </button>
       </div>
     </div>
-
   );
 });
+
+// --- New Card Component with Hooks ---
+const AnimatedCarouselCard = ({ entry, index, motionIndex }: { entry: JournalEntry, index: number, motionIndex: any }) => {
+  const scale = useTransform(motionIndex, [index - 1, index, index + 1], [CARD_SCALE, 1, CARD_SCALE], { clamp: false });
+  const x = useTransform(motionIndex, [index - 1, index, index + 1], [PEEK_X_PERCENTAGE, '0%', `-${PEEK_X_PERCENTAGE}`], { clamp: false });
+  const opacity = useTransform(motionIndex, [index - 1, index, index + 1], [CARD_OPACITY, 1, CARD_OPACITY], { clamp: false });
+  const zIndex = useTransform(motionIndex, (latest: number) => (Math.round(latest) === index ? 3 : 1));
+
+  // The display transform can cause performance issues and is not needed if the component is already being unmounted
+  // const display = useTransform(motionIndex, (latest) => Math.abs(index - latest) >= 2 ? 'none' : 'block');
+
+  return (
+    <motion.div
+      key={entry.date}
+      className="absolute w-full h-full"
+      style={{ x, scale, opacity, zIndex }}
+    >
+      <CarouselCard entry={entry} />
+    </motion.div>
+  );
+};
 
 // --- Main Carousel Component ---
 export const JournalCarousel: React.FC<JournalCarouselProps> = ({ entries, selectedIndex, onClose, onSelectedIndexChange }) => {
@@ -99,6 +119,15 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({ entries, selec
     } else {
       animate(index, selectedIndex, { type: 'spring', stiffness: 400, damping: 40 });
     }
+  };
+
+  const getVisibleCards = () => {
+    const start = Math.max(0, selectedIndex - 2);
+    const end = Math.min(entries.length, selectedIndex + 3);
+    return entries.slice(start, end).map((entry, i) => ({
+      entry,
+      originalIndex: start + i
+    }));
   };
 
   return (
@@ -135,25 +164,14 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({ entries, selec
         whileTap={{ cursor: 'grabbing' }}
         style={{ cursor: 'grab' }}
       >
-        {entries.map((entry, i) => {
-          const scale = useTransform(index, [i - 1, i, i + 1], [CARD_SCALE, 1, CARD_SCALE], { clamp: false });
-          // --- THIS IS THE FIX ---
-          // The output range is now correctly inverted.
-          const x = useTransform(index, [i - 1, i, i + 1], [PEEK_X_PERCENTAGE, '0%', `-${PEEK_X_PERCENTAGE}`], { clamp: false });
-          const opacity = useTransform(index, [i - 1, i, i + 1], [CARD_OPACITY, 1, CARD_OPACITY], { clamp: false });
-          const zIndex = useTransform(index, (latest) => (Math.round(latest) === i ? 3 : 1));
-          const display = useTransform(index, (latest) => Math.abs(i - latest) >= 2 ? 'none' : 'block');
-
-          return (
-            <motion.div
-              key={entry.date}
-              className="absolute w-full h-full"
-              style={{ x, scale, opacity, zIndex, display }}
-            >
-              <CarouselCard entry={entry} />
-            </motion.div>
-          );
-        })}
+        {getVisibleCards().map(({ entry, originalIndex }) => (
+          <AnimatedCarouselCard
+            key={entry.date}
+            entry={entry}
+            index={originalIndex}
+            motionIndex={index}
+          />
+        ))}
       </motion.div>
     </motion.div>
   );
