@@ -19,33 +19,55 @@ const CARD_OPACITY = 0.5;
 
 // --- Sub-component for a single card's UI (Memoized for performance) ---
 const CarouselCard: React.FC<{ entry: JournalEntry }> = React.memo(({ entry }) => {
-    const renderStars = (rating: number) => Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={`align-middle ${i < Math.round(rating) ? 'text-blue-500' : 'text-gray-300'}`}>★</span>
+  const renderStars = (rating: number) => Array.from({ length: 5 }, (_, i) => (
+    <span key={i} className={`align-middle ${i < Math.round(rating) ? 'text-blue-500' : 'text-gray-300'}`}>★</span>
+  ));
+  const getCategoryInitials = (categories: string[]) => {
+    const colors = ['bg-purple-100 text-purple-700', 'bg-yellow-100 text-yellow-700'];
+    return categories.slice(0, 2).map((cat, i) => (
+      <div key={cat} className={`w-9 h-9 flex items-center justify-center font-bold rounded-full text-sm ${colors[i % colors.length]}`}>
+        {cat.charAt(0).toUpperCase()}
+      </div>
     ));
-    const getCategoryInitials = (categories: string[]) => {
-        const colors = ['bg-purple-100 text-purple-700', 'bg-yellow-100 text-yellow-700'];
-        return categories.slice(0, 2).map((cat, i) => (
-            <div key={cat} className={`w-9 h-9 flex items-center justify-center font-bold rounded-full text-sm ${colors[i % colors.length]}`}>
-                {cat.charAt(0).toUpperCase()}
-            </div>
-        ));
-    };
-    return (
-        <div className="w-full h-full bg-white rounded-xl shadow-2xl overflow-hidden pointer-events-none select-none">
-            <img src={entry.imgUrl} alt="Journal entry" className="w-full h-64 object-cover" />
-            <div className="p-5">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex space-x-2">{getCategoryInitials(entry.categories)}</div>
-                    <div className="text-xl flex space-x-0.5">{renderStars(entry.rating)}</div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">
-                    {new Date(entry.date.split('/').reverse().join('-')).toLocaleDateString('en-US', { day: '2-digit', month: 'long' })}
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed mt-2 h-14 overflow-hidden text-ellipsis">{entry.description}</p>
-                <button className="w-full mt-4 py-3 text-center bg-gray-900 text-white font-semibold rounded-lg">View full Post</button>
-            </div>
+  };
+  return (
+    <div className="w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col">
+      {/* Image */}
+      <img
+        src={entry.imgUrl}
+        alt="Journal entry"
+        className="w-full h-64 object-cover"
+      />
+
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-5">
+        {/* Header (categories + rating) */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex space-x-2">{getCategoryInitials(entry.categories)}</div>
+          <div className="text-xl flex space-x-0.5">{renderStars(entry.rating)}</div>
         </div>
-    );
+
+        {/* Date */}
+        <h3 className="text-xl font-bold text-gray-900">
+          {new Date(entry.date.split('/').reverse().join('-')).toLocaleDateString(
+            'en-US',
+            { day: '2-digit', month: 'long' }
+          )}
+        </h3>
+
+        {/* Description */}
+        <p className="h-24 text-gray-600 text-sm leading-relaxed mt-2 flex-1 overflow-y-auto pr-1 ">
+          {entry.description}
+        </p>
+
+        {/* Button pinned at bottom */}
+        <button className="mt-4 py-3 w-full text-center bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300">
+          View Full Post
+        </button>
+      </div>
+    </div>
+
+  );
 });
 
 // --- Main Carousel Component ---
@@ -56,7 +78,7 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({ entries, selec
   useEffect(() => {
     animate(index, selectedIndex, { type: 'spring', stiffness: 400, damping: 40 });
   }, [selectedIndex, index]);
-  
+
   const handleDrag = (_: any, info: PanInfo) => {
     const cardWidth = containerRef.current?.offsetWidth || 0;
     if (cardWidth === 0) return;
@@ -114,23 +136,23 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({ entries, selec
         style={{ cursor: 'grab' }}
       >
         {entries.map((entry, i) => {
-            const scale = useTransform(index, [i - 1, i, i + 1], [CARD_SCALE, 1, CARD_SCALE], { clamp: false });
-            // --- THIS IS THE FIX ---
-            // The output range is now correctly inverted.
-            const x = useTransform(index, [i - 1, i, i + 1], [PEEK_X_PERCENTAGE, '0%', `-${PEEK_X_PERCENTAGE}`], { clamp: false });
-            const opacity = useTransform(index, [i - 1, i, i + 1], [CARD_OPACITY, 1, CARD_OPACITY], { clamp: false });
-            const zIndex = useTransform(index, (latest) => (Math.round(latest) === i ? 3 : 1));
-            const display = useTransform(index, (latest) => Math.abs(i - latest) >= 2 ? 'none' : 'block');
+          const scale = useTransform(index, [i - 1, i, i + 1], [CARD_SCALE, 1, CARD_SCALE], { clamp: false });
+          // --- THIS IS THE FIX ---
+          // The output range is now correctly inverted.
+          const x = useTransform(index, [i - 1, i, i + 1], [PEEK_X_PERCENTAGE, '0%', `-${PEEK_X_PERCENTAGE}`], { clamp: false });
+          const opacity = useTransform(index, [i - 1, i, i + 1], [CARD_OPACITY, 1, CARD_OPACITY], { clamp: false });
+          const zIndex = useTransform(index, (latest) => (Math.round(latest) === i ? 3 : 1));
+          const display = useTransform(index, (latest) => Math.abs(i - latest) >= 2 ? 'none' : 'block');
 
-            return (
-                <motion.div
-                    key={entry.date}
-                    className="absolute w-full h-full"
-                    style={{ x, scale, opacity, zIndex, display }}
-                >
-                    <CarouselCard entry={entry} />
-                </motion.div>
-            );
+          return (
+            <motion.div
+              key={entry.date}
+              className="absolute w-full h-full"
+              style={{ x, scale, opacity, zIndex, display }}
+            >
+              <CarouselCard entry={entry} />
+            </motion.div>
+          );
         })}
       </motion.div>
     </motion.div>
