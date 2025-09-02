@@ -40,14 +40,18 @@ const CarouselCard: React.FC<{
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // New star style
   const stars = Array.from({ length: 5 }, (_, i) => (
-    <span key={i} className={`align-middle ${i < Math.round(entry.rating) ? 'text-blue-500' : 'text-gray-300'}`}>★</span>
+    <svg key={i} className={`w-5 h-5 ${i < Math.round(entry.rating) ? 'text-blue-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.368-2.448a1 1 0 00-1.175 0l-3.368 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.07 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
+    </svg>
   ));
 
+  // New category initials style
   const initials = entry.categories.slice(0, 2).map((cat, i) => {
-    const colors = ['bg-purple-100 text-purple-700', 'bg-yellow-100 text-yellow-700'];
+    const colors = ['bg-purple-100 text-purple-700', 'bg-pink-100 text-pink-700'];
     return (
-      <div key={cat} className={`w-9 h-9 flex items-center justify-center font-bold rounded-full text-sm ${colors[i % colors.length]}`}>
+      <div key={cat} className={`w-8 h-8 flex items-center justify-center font-bold rounded-full text-sm ${colors[i % colors.length]}`}>
         {cat.charAt(0).toUpperCase()}
       </div>
     );
@@ -76,7 +80,7 @@ const CarouselCard: React.FC<{
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col">
+    <div className="w-full h-full bg-white rounded-lg shadow-lg overflow-hidden flex flex-col relative">
       {/* Action Menu Button */}
       <button
         onClick={handleMenuClick}
@@ -106,17 +110,19 @@ const CarouselCard: React.FC<{
       </AnimatePresence>
 
       <img src={entry.imgUrl} alt="Journal entry" className="w-full h-64 object-cover" />
-      <div className="flex flex-col flex-1 p-5">
-        <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col flex-1 p-5 border-t border-gray-100">
+        <div className="flex justify-between items-center mb-3">
           <div className="flex space-x-2">{initials}</div>
-          <div className="text-xl flex space-x-0.5">{stars}</div>
+          <div className="flex space-x-0.5">{stars}</div>
         </div>
-        <h3 className="text-xl font-bold text-gray-900">{formattedDate}</h3>
-        <p className="h-24 text-gray-600 text-sm leading-relaxed mt-2 flex-1 overflow-y-auto pr-1">
+        <h3 className="text-xl font-bold text-gray-800">{formattedDate}</h3>
+        <p className="text-gray-600 text-base leading-relaxed mt-2 flex-1 overflow-y-auto pr-1">
           {entry.description}
         </p>
-        <button className="mt-4 py-3 w-full text-center bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300">
-          View Full Post
+      </div>
+      <div className="border-t-2 -mx-5 px-5 sticky bottom-0 bg-white">
+        <button className="py-3 w-full text-center bg-transparent text-gray-800 font-bold rounded-lg hover:bg-gray-100 transition-colors text-lg">
+          View full Post
         </button>
       </div>
     </div>
@@ -205,7 +211,7 @@ export const JournalCarousel: React.FC<JournalCarouselProps> = ({
               resolve();
               return;
             }
-  
+
             // If there is a URL, proceed with loading.
             const img = new Image();
             img.src = e.imgUrl; // Now TypeScript knows e.imgUrl is a string here.
