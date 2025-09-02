@@ -31,7 +31,7 @@ export const useInfiniteDays = (initialMonth: Date) => {
 
     return dayArray.map(date => ({
       date,
-      isCurrentMonth: date.getMonth() === monthRange.start.getMonth() || date.getMonth() === monthRange.end.getMonth(), // This logic simplifies; styling will handle visibility
+      isCurrentMonth: date.getMonth() === monthRange.start.getMonth() || date.getMonth() === monthRange.end.getMonth(), 
       key: format(date, 'yyyy-MM-dd'),
     }));
   }, [monthRange]);

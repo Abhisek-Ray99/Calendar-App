@@ -1,4 +1,4 @@
-// src/components/JournalModal.tsx
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { JournalEntry } from '../types';

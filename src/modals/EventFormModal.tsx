@@ -14,7 +14,7 @@ const StarRating: React.FC<{ rating: number; setRating: (rating: number) => void
   <div className="flex space-x-1">
     {[1, 2, 3, 4, 5].map((star) => (
       <button key={star} type="button" onClick={() => setRating(star)} className="focus:outline-none">
-        <svg className={`w-8 h-8 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+        <svg className={`w-8 h-8 ${star <= rating ? 'text-[#5bb9e5]' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.368-2.448a1 1 0 00-1.175 0l-3.368 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.07 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z" />
         </svg>
       </button>
@@ -113,7 +113,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ isOpen, onClose,
             </div>
             <div className="flex justify-end space-x-3 pt-4">
               <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">{initialData ? 'Save Changes' : 'Add Entry'}</button>
+              <button type="submit" className="bg-[#5bb9e5] text-white px-4 py-2 rounded-md hover:bg-blue-700">{initialData ? 'Save Changes' : 'Add Entry'}</button>
             </div>
           </form>
         </motion.div>
